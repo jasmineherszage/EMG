@@ -98,6 +98,8 @@ def draw_detected(emg_signal):
         #draw a vertical line where we found the TMS pulse
         tms_pulse = find_tms_pulse(emg_signal)
         plt.axvline(x=tms_pulse, color='indigo', linestyle='solid', linewidth=0.9)
+        plt.xlabel('Time (ms)')
+        plt.ylabel('mV')
 
 
 
@@ -113,11 +115,11 @@ def plot_recruitment_curve(df):
         if is_mep(df[col]):
             mep_sizes.append(get_mep_size(df[col]))
         else:
-            mep_sizes.append(-1)
+            mep_sizes.append(None)
     
     sum_meps = 0; counter = 0
     for i in range(12):
-        if mep_sizes[i] != -1:
+        if mep_sizes[i] != None:
             sum_meps += mep_sizes[i]
             counter += 1
     recruitment_curve[0] = sum_meps/counter
@@ -127,10 +129,16 @@ def plot_recruitment_curve(df):
         #Stimulation at 100% RMT is given 12 times. Then, each stimulation intensity was given 6 times
         location = 6+tms_intensity*6
         for i in range(6):
-            if mep_sizes[location+i] != -1:
+            if mep_sizes[location+i] != None:
                 sum_meps += mep_sizes[location+i]
                 counter += 1
         recruitment_curve[tms_intensity] = sum_meps/counter
 
-    sns.lineplot(x=range(6), y=recruitment_curve, color='indigo', markers=True, linewidth=1.5)
+    #set relative stimulation intensities to be the x value of the recruitment curve plot
+    stimulation_intensities = [100]*12 + [110]*6+ [120]*6+ [130]*6+ [140]*6+ [150]*6
+
+    rec_curve_long_format = {'Stimulation Intensities':stimulation_intensities, 'MEP size':mep_sizes}
+    
+    sns.lineplot(data=rec_curve_long_format, x='Stimulation Intensities', y='MEP size', color='indigo', markers=True, linewidth=1.5)
+    plt.xlabel('TMS Intensity (%RMT)')
     return recruitment_curve
